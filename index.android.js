@@ -11,18 +11,34 @@ import {
   Button,
   View
 } from 'react-native'
+import { ReactNativeAudioStreaming, Player } from 'react-native-audio-streaming'
+import secret from './secret.json'
 
 export default class appscoast extends Component {
   constructor (props) {
     super(props)
+    this.state = {
+      streamUrl: ''
+    }
   }
-  _play () {
-    console.log('play')
+  componentWillMount () {
+    fetch(`http://api.soundcloud.com/tracks/308967639?client_id=${secret.SOUNDCLOUD_CLIENT_ID}`)
+      .then((result) => result.json())
+      .then((data) => {
+        const streamUrl = data.stream_url + `?client_id=${secret.SOUNDCLOUD_CLIENT_ID}`
+        // ReactNativeAudioStreaming.play(streamUrl, {
+        //   showInAndroidNotifications: true
+        // })
+        this.setState({
+          streamUrl
+        })
+      })
+      .catch(err => console.error(err))
   }
   render () {
     return (
       <View style={styles.container}>
-        <Button title='Play' onPress={this._play.bind(this)} />
+        <Player url={this.state.streamUrl} />
       </View>
     )
   }
