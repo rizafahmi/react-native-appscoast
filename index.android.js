@@ -9,36 +9,53 @@ import {
   AppRegistry,
   StyleSheet,
   Button,
+  Text,
   View
 } from 'react-native'
 import { ReactNativeAudioStreaming, Player } from 'react-native-audio-streaming'
 import secret from './secret.json'
 
+const URL = `http://api.soundcloud.com/users/126621567/tracks?client_id=${secret.SOUNDCLOUD_CLIENT_ID}`
+
 export default class appscoast extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      streamUrl: ''
+      currentTrack: '',
+      playlists: []
     }
   }
-  componentWillMount () {
-    fetch(`http://api.soundcloud.com/tracks/308967639?client_id=${secret.SOUNDCLOUD_CLIENT_ID}`)
+  componentDidMount () {
+    fetch(URL)
       .then((result) => result.json())
       .then((data) => {
-        const streamUrl = data.stream_url + `?client_id=${secret.SOUNDCLOUD_CLIENT_ID}`
-        // ReactNativeAudioStreaming.play(streamUrl, {
-        //   showInAndroidNotifications: true
-        // })
+        const currentTrack = data[0].stream_url + `?client_id=${secret.SOUNDCLOUD_CLIENT_ID}`
+
+        const playlists = data.map(track => {
+          return track.stream_url + `?client_id=${secret.SOUNDCLOUD_CLIENT_ID}`
+        })
         this.setState({
-          streamUrl
+          currentTrack,
+          playlists
         })
       })
       .catch(err => console.error(err))
   }
+  onNextButtonPress () {
+    ReactNativeAudioStreaming.stop()
+    const randomTrackNumber = Math.floor(Math.random() * (0, this.state.playlists.length))
+    this.setState({
+      currentTrack: this.state.playlists[randomTrackNumber]
+    })
+    ReactNativeAudioStreaming.play(this.state.currentTrack, {
+      showInAndroidNotifications: false
+    })
+  }
   render () {
     return (
       <View style={styles.container}>
-        <Player url={this.state.streamUrl} />
+        <Button title='Shuffle' onPress={this.onNextButtonPress.bind(this)} />
+        <Player url={this.state.currentTrack} />
       </View>
     )
   }
